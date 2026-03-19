@@ -345,7 +345,7 @@ client.once(Events.ClientReady, async (readyClient) => {
     activities: [
       {
         name: "Eryx Studio",
-        type: ActivityType.Listening
+        type: ActivityType.Playing
       }
     ],
     status: "online"
