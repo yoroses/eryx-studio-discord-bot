@@ -1,4 +1,5 @@
 import {
+  ActivityType,
   Client,
   Events,
   GatewayIntentBits
@@ -340,6 +341,16 @@ async function handleReset(interaction) {
 }
 
 client.once(Events.ClientReady, async (readyClient) => {
+  readyClient.user.setPresence({
+    activities: [
+      {
+        name: "Eryx Studio",
+        type: ActivityType.Listening
+      }
+    ],
+    status: "online"
+  });
+
   console.log(`Bot online as ${readyClient.user.tag}`);
   console.log(`Loaded ${commands.length} slash commands.`);
 });
