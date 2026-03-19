@@ -1,0 +1,7 @@
+node_modules/
+.env
+npm-debug.log*
+bot.log
+bot.err
+bot2.log
+bot2.err
