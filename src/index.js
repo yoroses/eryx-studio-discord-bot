@@ -344,8 +344,8 @@ client.once(Events.ClientReady, async (readyClient) => {
   readyClient.user.setPresence({
     activities: [
       {
-        name: "roses",
-        type: ActivityType.Listening
+        name: "with roses",
+        type: ActivityType.Playing
       }
     ],
     status: "online"
