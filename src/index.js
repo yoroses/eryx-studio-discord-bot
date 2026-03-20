@@ -16,9 +16,9 @@ const client = new Client({
   ]
 });
 
-const groq = new OpenAI({
-  apiKey: config.groqApiKey,
-  baseURL: config.groqBaseUrl
+const llm = new OpenAI({
+  apiKey: config.llmApiKey,
+  baseURL: config.llmBaseUrl
 });
 
 const conversationState = new Map();
@@ -304,8 +304,8 @@ async function generateAnswer(conversationKey, prompt) {
     }
   ];
 
-  const response = await groq.chat.completions.create({
-    model: config.groqModel,
+  const response = await llm.chat.completions.create({
+    model: config.llmModel,
     messages
   });
 

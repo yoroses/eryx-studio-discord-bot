@@ -1,6 +1,6 @@
 # Eryx Studio Discord Bot
 
-Discord bot sederhana yang bisa ngobrol seperti ChatGPT memakai Groq API, slash command Discord, dan mention langsung.
+Discord bot sederhana yang bisa ngobrol seperti ChatGPT memakai Gemini API, slash command Discord, dan mention langsung.
 
 ## Fitur
 
@@ -28,8 +28,8 @@ copy .env.example .env
 - `DISCORD_TOKEN`
 - `DISCORD_CLIENT_ID`
 - `DISCORD_GUILD_ID` opsional tapi direkomendasikan saat testing agar slash command muncul lebih cepat
-- `GROQ_API_KEY`
-- `GROQ_MODEL` opsional, default `openai/gpt-oss-20b`
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL` opsional, default `gemini-2.0-flash-lite`
 - `SYSTEM_PROMPT` opsional
 
 4. Register slash command:
@@ -64,12 +64,12 @@ Kamu bisa mention bot langsung tanpa slash command:
 8. Pakai URL hasil generator untuk invite bot ke server kamu.
 9. Di menu `Bot`, aktifkan `Message Content Intent` agar bot bisa membaca isi pesan mention.
 
-## Cara ambil API key Groq
+## Cara ambil API key Gemini
 
-1. Buka `https://console.groq.com/keys`.
-2. Login atau buat akun Groq.
-3. Buat API key baru.
-4. Salin ke `GROQ_API_KEY` di file `.env`.
+1. Buka `https://aistudio.google.com/`.
+2. Login dengan akun Google.
+3. Buat API key Gemini dari AI Studio.
+4. Salin ke `GEMINI_API_KEY` di file `.env`.
 
 ## Catatan
 
@@ -77,5 +77,6 @@ Kamu bisa mention bot langsung tanpa slash command:
 - Project ini mengirim ulang history chat ke API di setiap request agar konteks percakapan tetap nyambung.
 - Untuk project production, lebih bagus kalau riwayat disimpan ke database seperti SQLite, Postgres, atau Redis.
 - Kalau `DISCORD_GUILD_ID` diisi, command akan didaftarkan khusus ke server itu. Kalau kosong, command didaftarkan global.
-- Berdasarkan docs resmi Groq saat ini, Groq kompatibel dengan OpenAI SDK jika `baseURL` diarahkan ke `https://api.groq.com/openai/v1`.
-- Untuk kompatibilitas yang lebih aman, project ini memakai `chat.completions.create(...)` dengan model default `openai/gpt-oss-20b`.
+- Project ini memakai `openai` SDK dengan endpoint kompatibel OpenAI milik Gemini di `https://generativelanguage.googleapis.com/v1beta/openai/`.
+- Default model diset ke `gemini-2.0-flash-lite`, yang cocok untuk usage ringan dan free tier Gemini.
+- Untuk transisi yang lebih aman, config masih menerima `GROQ_API_KEY` sebagai fallback sementara kalau nama variabel API key di `.env` lama belum diganti.
