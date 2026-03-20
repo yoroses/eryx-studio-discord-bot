@@ -82,7 +82,7 @@ npm install
 5. Pastikan `yt-dlp` terpasang untuk fitur voice YouTube:
 
 ```bash
-python3 -m pip install -U yt-dlp
+sudo apt install -y yt-dlp
 ```
 
 6. Buat file environment:
@@ -105,6 +105,14 @@ SELF_CHECK_ENABLED=true
 STRICT_FACTUAL_MODE=true
 ASK_CLARIFY_FIRST_MODE=true
 ROLE_AWARE_MENTION_MODE=true
+YT_DLP_COMMAND=
+```
+
+Kalau command `yt-dlp` di server kamu tidak ada di PATH standar, isi `YT_DLP_COMMAND` juga.
+Contoh:
+
+```env
+YT_DLP_COMMAND=/usr/bin/yt-dlp
 ```
 
 8. Register slash command:

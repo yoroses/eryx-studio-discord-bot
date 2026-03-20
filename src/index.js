@@ -169,6 +169,28 @@ function isYouTubeUrl(url) {
   return /(?:youtube\.com|youtu\.be)/i.test(url);
 }
 
+function getYtDlpSpawnConfig() {
+  if (config.ytDlpCommand.trim()) {
+    const parts = config.ytDlpCommand.trim().split(/\s+/);
+    return {
+      command: parts[0],
+      argsPrefix: parts.slice(1)
+    };
+  }
+
+  if (process.platform === "win32") {
+    return {
+      command: "py",
+      argsPrefix: ["-m", "yt_dlp"]
+    };
+  }
+
+  return {
+    command: "yt-dlp",
+    argsPrefix: []
+  };
+}
+
 function createFfmpegResource(input, usePipeInput = false) {
   const ffmpeg = spawn(
     "ffmpeg",
@@ -213,11 +235,11 @@ function createFfmpegResource(input, usePipeInput = false) {
 }
 
 function createYouTubePipeline(url) {
+  const ytDlpConfig = getYtDlpSpawnConfig();
   const ytDlpProcess = spawn(
-    "py",
+    ytDlpConfig.command,
     [
-      "-m",
-      "yt_dlp",
+      ...ytDlpConfig.argsPrefix,
       "-f",
       "bestaudio",
       "--no-playlist",
