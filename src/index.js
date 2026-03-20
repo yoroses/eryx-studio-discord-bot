@@ -29,6 +29,18 @@ const specialMentionIds = {
   roses: config.rosesUserId
 };
 
+function getUserFacingErrorMessage(error) {
+  if (error?.status === 429) {
+    return "Kuota Gemini lagi kena limit atau free tier-nya habis sementara. Coba lagi beberapa saat lagi.";
+  }
+
+  if (error?.status === 401 || error?.status === 403) {
+    return "API key AI tidak valid atau belum punya akses ke model yang dipakai.";
+  }
+
+  return "Terjadi error saat memproses permintaan. Coba lagi sebentar lagi.";
+}
+
 function getConversationKey(interaction) {
   const guildId = interaction.guildId || "dm";
   return `${guildId}:${interaction.channelId}:${interaction.user.id}`;
@@ -371,9 +383,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
   } catch (error) {
     console.error("Failed to handle interaction:", error);
-
-    const message =
-      "Terjadi error saat memproses permintaan. Coba lagi sebentar lagi.";
+    const message = getUserFacingErrorMessage(error);
 
     if (interaction.deferred || interaction.replied) {
       await interaction.followUp({
@@ -453,9 +463,7 @@ client.on(Events.MessageCreate, async (message) => {
     }
   } catch (error) {
     console.error("Failed to handle mention message:", error);
-    await message.reply(
-      "Terjadi error saat memproses pesan kamu. Coba lagi sebentar lagi."
-    );
+    await message.reply(getUserFacingErrorMessage(error));
   }
 });
 
