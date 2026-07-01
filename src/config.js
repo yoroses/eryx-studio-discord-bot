@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const llmApiKey = process.env.ANTHROPIC_API_KEY;
-const llmModel = process.env.CLAUDE_MODEL || "claude-opus-4-8";
+const llmModel = process.env.CLAUDE_MODEL || "claude-haiku-4-5";
 const llmMaxTokens = Number(process.env.CLAUDE_MAX_TOKENS || 1024);
 
 const requiredVars = ["DISCORD_TOKEN", "DISCORD_CLIENT_ID", "ANTHROPIC_API_KEY"];

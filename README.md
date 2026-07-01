@@ -33,7 +33,7 @@ copy .env.example .env
 - `DISCORD_CLIENT_ID`
 - `DISCORD_GUILD_ID` opsional tapi direkomendasikan saat testing agar slash command muncul lebih cepat
 - `ANTHROPIC_API_KEY`
-- `CLAUDE_MODEL` opsional, default `claude-opus-4-8`
+- `CLAUDE_MODEL` opsional, default `claude-haiku-4-5`
 - `CLAUDE_MAX_TOKENS` opsional, default `1024`
 - `SYSTEM_PROMPT` opsional
 
@@ -94,7 +94,7 @@ DISCORD_TOKEN=token_bot_discord
 DISCORD_CLIENT_ID=application_client_id
 DISCORD_GUILD_ID=id_server_testing
 ANTHROPIC_API_KEY=api_key_claude
-CLAUDE_MODEL=claude-opus-4-8
+CLAUDE_MODEL=claude-haiku-4-5
 CLAUDE_MAX_TOKENS=1024
 REPLY_DELAY_MS=1500
 SELF_CHECK_ENABLED=true
@@ -179,5 +179,5 @@ Untuk slash command voice:
 - Bot tidak perlu permission `Administrator` untuk mention member. Yang penting intent member aktif dan permission dasar chat tersedia.
 - Untuk fitur voice, bot juga butuh izin `Connect` dan `Speak` di voice channel tujuan.
 - Playback YouTube paling stabil dijalankan di VPS Linux dengan jaringan yang stabil.
-- Project ini pakai `@anthropic-ai/sdk` resmi dan memanggil `messages.create(...)` dengan model default `claude-opus-4-8`.
-- Kalau mau model yang lebih hemat biaya, isi `CLAUDE_MODEL` dengan `claude-sonnet-5` atau `claude-haiku-4-5`.
+- Project ini pakai `@anthropic-ai/sdk` resmi dan memanggil `messages.create(...)` dengan model default `claude-haiku-4-5` (paling murah dan cepat, cocok buat chat bot Discord).
+- Kalau butuh jawaban yang lebih pintar dan nggak masalah biaya lebih mahal, isi `CLAUDE_MODEL` dengan `claude-sonnet-5` atau `claude-opus-4-8`.
