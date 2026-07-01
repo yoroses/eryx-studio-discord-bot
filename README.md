@@ -56,7 +56,7 @@ Contoh di bawah ini cocok untuk VPS Ubuntu atau Debian.
 
 ```bash
 sudo apt update
-sudo apt install -y git curl ffmpeg python3 python3-pip
+sudo apt install -y git curl
 ```
 
 2. Install Node.js 22:
@@ -79,20 +79,14 @@ cd eryx-studio-discord-bot
 npm install
 ```
 
-5. Pastikan `yt-dlp` terpasang untuk fitur voice YouTube:
-
-```bash
-sudo apt install -y yt-dlp
-```
-
-6. Buat file environment:
+5. Buat file environment:
 
 ```bash
 cp .env.example .env
 nano .env
 ```
 
-7. Isi `.env` minimal dengan:
+6. Isi `.env` minimal dengan:
 
 ```env
 DISCORD_TOKEN=token_bot_discord
@@ -105,29 +99,21 @@ SELF_CHECK_ENABLED=true
 STRICT_FACTUAL_MODE=true
 ASK_CLARIFY_FIRST_MODE=true
 ROLE_AWARE_MENTION_MODE=true
-YT_DLP_COMMAND=
 ```
 
-Kalau command `yt-dlp` di server kamu tidak ada di PATH standar, isi `YT_DLP_COMMAND` juga.
-Contoh:
-
-```env
-YT_DLP_COMMAND=/usr/bin/yt-dlp
-```
-
-8. Register slash command:
+7. Register slash command:
 
 ```bash
 npm run register
 ```
 
-9. Jalankan bot:
+8. Jalankan bot:
 
 ```bash
 npm start
 ```
 
-10. Kalau mau bot tetap hidup setelah logout SSH, paling gampang pakai `pm2`:
+9. Kalau mau bot tetap hidup setelah logout SSH, paling gampang pakai `pm2`:
 
 ```bash
 sudo npm install -g pm2
@@ -190,7 +176,6 @@ Untuk slash command voice:
 - Kalau `DISCORD_GUILD_ID` diisi, command akan didaftarkan khusus ke server itu. Kalau kosong, command didaftarkan global.
 - Bot tidak perlu permission `Administrator` untuk mention member. Yang penting intent member aktif dan permission dasar chat tersedia.
 - Untuk fitur voice, bot juga butuh izin `Connect` dan `Speak` di voice channel tujuan.
-- Untuk fitur voice YouTube, server sebaiknya punya `ffmpeg`, `python3`, dan `yt-dlp`.
 - Playback YouTube paling stabil dijalankan di VPS Linux dengan jaringan yang stabil.
 - Berdasarkan docs resmi Groq saat ini, Groq kompatibel dengan OpenAI SDK jika `baseURL` diarahkan ke `https://api.groq.com/openai/v1`.
 - Untuk kompatibilitas yang lebih aman, project ini memakai `chat.completions.create(...)` dengan model default `openai/gpt-oss-20b`.

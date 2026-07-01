@@ -1,7 +1,6 @@
 import {
   AudioPlayerStatus,
   NoSubscriberBehavior,
-  StreamType,
   entersState,
   VoiceConnectionDisconnectReason,
   VoiceConnectionStatus,
@@ -16,7 +15,6 @@ import {
   Events,
   GatewayIntentBits
 } from "discord.js";
-import { spawn } from "node:child_process";
 import OpenAI from "openai";
 import play from "play-dl";
 import ytdl from "@distube/ytdl-core";
@@ -141,126 +139,11 @@ function getGuildVoiceState(guildId) {
     });
 
     voicePlayers.set(guildId, {
-      player,
-      ffmpegProcess: null,
-      ytDlpProcess: null
+      player
     });
   }
 
   return voicePlayers.get(guildId);
-}
-
-function cleanupVoiceProcess(state) {
-  if (state?.ffmpegProcess && !state.ffmpegProcess.killed) {
-    state.ffmpegProcess.kill("SIGKILL");
-  }
-
-  if (state?.ytDlpProcess && !state.ytDlpProcess.killed) {
-    state.ytDlpProcess.kill("SIGKILL");
-  }
-
-  if (state) {
-    state.ffmpegProcess = null;
-    state.ytDlpProcess = null;
-  }
-}
-
-function isYouTubeUrl(url) {
-  return /(?:youtube\.com|youtu\.be)/i.test(url);
-}
-
-function getYtDlpSpawnConfig() {
-  if (config.ytDlpCommand.trim()) {
-    const parts = config.ytDlpCommand.trim().split(/\s+/);
-    return {
-      command: parts[0],
-      argsPrefix: parts.slice(1)
-    };
-  }
-
-  if (process.platform === "win32") {
-    return {
-      command: "py",
-      argsPrefix: ["-m", "yt_dlp"]
-    };
-  }
-
-  return {
-    command: "yt-dlp",
-    argsPrefix: []
-  };
-}
-
-function createFfmpegResource(input, usePipeInput = false) {
-  const ffmpeg = spawn(
-    "ffmpeg",
-    [
-      ...(usePipeInput
-        ? []
-        : [
-            "-reconnect",
-            "1",
-            "-reconnect_streamed",
-            "1",
-            "-reconnect_delay_max",
-            "5"
-          ]),
-      ...(usePipeInput ? [] : ["-i", input]),
-      ...(usePipeInput ? ["-i", "pipe:0"] : []),
-      "-analyzeduration",
-      "0",
-      "-loglevel",
-      "warning",
-      "-vn",
-      "-c:a",
-      "libopus",
-      "-b:a",
-      "128k",
-      "-f",
-      "ogg",
-      "pipe:1"
-    ],
-    {
-      windowsHide: true,
-      stdio: [usePipeInput ? "pipe" : "ignore", "pipe", "pipe"]
-    }
-  );
-
-  return {
-    process: ffmpeg,
-    resource: createAudioResource(ffmpeg.stdout, {
-      inputType: StreamType.OggOpus
-    })
-  };
-}
-
-function createYouTubePipeline(url) {
-  const ytDlpConfig = getYtDlpSpawnConfig();
-  const ytDlpProcess = spawn(
-    ytDlpConfig.command,
-    [
-      ...ytDlpConfig.argsPrefix,
-      "-f",
-      "bestaudio",
-      "--no-playlist",
-      "-o",
-      "-",
-      url
-    ],
-    {
-      windowsHide: true,
-      stdio: ["ignore", "pipe", "pipe"]
-    }
-  );
-
-  const ffmpegSource = createFfmpegResource("", true);
-  ytDlpProcess.stdout.pipe(ffmpegSource.process.stdin);
-
-  return {
-    ytDlpProcess,
-    ffmpegProcess: ffmpegSource.process,
-    resource: ffmpegSource.resource
-  };
 }
 
 async function joinMemberVoiceChannel(guild, member, requestedChannel = null) {
@@ -432,8 +315,6 @@ function leaveGuildVoiceChannel(guildId) {
     state.player.stop(true);
   }
 
-  cleanupVoiceProcess(state);
-
   if (state?.connection) {
     state.connection.destroy();
   }
@@ -449,7 +330,6 @@ function stopGuildPlayback(guildId) {
   }
 
   state.player.stop(true);
-  cleanupVoiceProcess(state);
   return true;
 }
 
@@ -500,72 +380,30 @@ async function playInVoiceChannel(guild, member, url) {
     logVoice("starting stream request", { url });
     let resource = null;
 
-    cleanupVoiceProcess(state);
-
-    if (isYouTubeUrl(url)) {
-      const pipeline = createYouTubePipeline(url);
-      state.ytDlpProcess = pipeline.ytDlpProcess;
-      state.ffmpegProcess = pipeline.ffmpegProcess;
-      resource = pipeline.resource;
-
-      pipeline.ytDlpProcess.stderr.on("data", (chunk) => {
-        logVoice("yt-dlp stderr", {
-          guildId: guild.id,
-          message: chunk.toString().trim()
-        });
+    try {
+      const stream = await play.stream(url);
+      resource = createAudioResource(stream.stream, {
+        inputType: stream.type
       });
-
-      pipeline.ffmpegProcess.stderr.on("data", (chunk) => {
-        logVoice("ffmpeg stderr", {
-          guildId: guild.id,
-          message: chunk.toString().trim()
-        });
-      });
-
-      pipeline.ytDlpProcess.on("close", (code) => {
-        logVoice("yt-dlp process closed", {
-          guildId: guild.id,
-          code
-        });
-      });
-
-      pipeline.ffmpegProcess.on("close", (code) => {
-        logVoice("ffmpeg process closed", {
-          guildId: guild.id,
-          code
-        });
-      });
-
-      logVoice("stream source selected", {
+      logVoice("stream source selected", { url, source: "play-dl" });
+    } catch (primaryError) {
+      logVoice("play-dl stream failed, trying ytdl fallback", {
         url,
-        source: "yt-dlp-stdout+ffmpeg"
+        error: primaryError?.message || String(primaryError)
       });
-    } else {
-      try {
-        const stream = await play.stream(url);
-        resource = createAudioResource(stream.stream, {
-          inputType: stream.type
-        });
-        logVoice("stream source selected", { url, source: "play-dl" });
-      } catch (primaryError) {
-        logVoice("play-dl stream failed, trying ytdl fallback", {
-          url,
-          error: primaryError?.message || String(primaryError)
-        });
 
-        if (!ytdl.validateURL(url)) {
-          throw primaryError;
-        }
-
-        const fallbackStream = ytdl(url, {
-          filter: "audioonly",
-          quality: "highestaudio",
-          highWaterMark: 1 << 25
-        });
-
-        resource = createAudioResource(fallbackStream);
-        logVoice("stream source selected", { url, source: "ytdl-core" });
+      if (!ytdl.validateURL(url)) {
+        throw primaryError;
       }
+
+      const fallbackStream = ytdl(url, {
+        filter: "audioonly",
+        quality: "highestaudio",
+        highWaterMark: 1 << 25
+      });
+
+      resource = createAudioResource(fallbackStream);
+      logVoice("stream source selected", { url, source: "ytdl-core" });
     }
 
     state.player.on("stateChange", (oldState, newState) => {
