@@ -32,6 +32,7 @@ copy .env.example .env
 - `DISCORD_TOKEN`
 - `DISCORD_CLIENT_ID`
 - `DISCORD_GUILD_ID` opsional tapi direkomendasikan saat testing agar slash command muncul lebih cepat
+- `ALLOWED_USER_IDS` opsional, daftar User ID Discord yang boleh pakai bot (pisahkan dengan koma). Kosongkan untuk mengizinkan semua orang.
 - `ANTHROPIC_API_KEY`
 - `CLAUDE_MODEL` opsional, default `claude-haiku-4-5`
 - `CLAUDE_MAX_TOKENS` opsional, default `1024`
@@ -93,6 +94,7 @@ nano .env
 DISCORD_TOKEN=token_bot_discord
 DISCORD_CLIENT_ID=application_client_id
 DISCORD_GUILD_ID=id_server_testing
+ALLOWED_USER_IDS=123456789012345678,987654321098765432
 ANTHROPIC_API_KEY=api_key_claude
 CLAUDE_MODEL=claude-haiku-4-5
 CLAUDE_MAX_TOKENS=1024
@@ -169,6 +171,22 @@ Untuk slash command voice:
 2. Login atau buat akun Anthropic.
 3. Klik `Create Key`, buat API key baru.
 4. Salin ke `ANTHROPIC_API_KEY` di file `.env`.
+
+## Membatasi bot hanya untuk user tertentu
+
+Isi `ALLOWED_USER_IDS` di `.env` dengan User ID Discord yang boleh pakai bot, dipisah koma. Selain user di daftar itu, slash command akan ditolak (dengan pesan error) dan mention akan diabaikan sepenuhnya (bot tidak memanggil Claude API sama sekali, jadi tidak ada token yang terpakai).
+
+Cara ambil User ID Discord:
+
+1. Aktifkan Developer Mode: `User Settings > Advanced > Developer Mode`.
+2. Klik kanan nama user yang mau diizinkan → `Copy User ID`.
+3. Tempel ID itu ke `ALLOWED_USER_IDS`, pisahkan dengan koma kalau lebih dari satu:
+
+```env
+ALLOWED_USER_IDS=123456789012345678,987654321098765432
+```
+
+Kosongkan `ALLOWED_USER_IDS` (atau hapus barisnya) kalau mau bot bisa dipakai semua orang lagi.
 
 ## Catatan
 

@@ -64,6 +64,13 @@ function getUserFacingErrorMessage(error) {
   return "Terjadi error saat memproses permintaan. Coba lagi sebentar lagi.";
 }
 
+function isUserAllowed(userId) {
+  return (
+    config.allowedUserIds.length === 0 ||
+    config.allowedUserIds.includes(userId)
+  );
+}
+
 function getConversationKey(interaction) {
   const guildId = interaction.guildId || "dm";
   return `${guildId}:${interaction.channelId}:${interaction.user.id}`;
@@ -1021,6 +1028,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     return;
   }
 
+  if (!isUserAllowed(interaction.user.id)) {
+    await interaction.reply({
+      content: "Maaf, kamu tidak punya izin untuk menggunakan bot ini.",
+      ephemeral: true
+    });
+    return;
+  }
+
   try {
     if (interaction.commandName === "chat") {
       await handleChat(interaction);
@@ -1071,6 +1086,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 client.on(Events.MessageCreate, async (message) => {
   if (message.author.bot || !client.user) {
+    return;
+  }
+
+  if (!isUserAllowed(message.author.id)) {
     return;
   }
 

@@ -19,6 +19,10 @@ export const config = {
   discordToken: process.env.DISCORD_TOKEN,
   discordClientId: process.env.DISCORD_CLIENT_ID,
   discordGuildId: process.env.DISCORD_GUILD_ID || "",
+  allowedUserIds: (process.env.ALLOWED_USER_IDS || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean),
   llmApiKey,
   llmModel,
   llmMaxTokens,
