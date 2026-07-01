@@ -15,7 +15,7 @@ import {
   Events,
   GatewayIntentBits
 } from "discord.js";
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import play from "play-dl";
 import ytdl from "@distube/ytdl-core";
 import { commands } from "./commands.js";
@@ -31,9 +31,8 @@ const client = new Client({
   ]
 });
 
-const llm = new OpenAI({
-  apiKey: config.llmApiKey,
-  baseURL: config.llmBaseUrl
+const llm = new Anthropic({
+  apiKey: config.llmApiKey
 });
 
 const conversationState = new Map();
@@ -520,31 +519,32 @@ function buildAnswerMessages(history, prompt) {
     );
   }
 
-  return [
-    {
-      role: "system",
-      content: config.systemPrompt
-    },
-    {
-      role: "system",
-      content: behavioralDirectives.join(" ")
-    },
-    ...history,
-    {
-      role: "user",
-      content: prompt
-    }
-  ];
+  return {
+    system: `${config.systemPrompt} ${behavioralDirectives.join(" ")}`,
+    messages: [
+      ...history,
+      {
+        role: "user",
+        content: prompt
+      }
+    ]
+  };
 }
 
-async function createDraftAnswer(messages) {
-  const response = await llm.chat.completions.create({
+function extractResponseText(response) {
+  const textBlock = response.content.find((block) => block.type === "text");
+  return textBlock?.text?.trim() || "";
+}
+
+async function createDraftAnswer(system, messages) {
+  const response = await llm.messages.create({
     model: config.llmModel,
-    messages,
-    temperature: 0.2
+    max_tokens: config.llmMaxTokens,
+    system,
+    messages
   });
 
-  return response.choices[0]?.message?.content?.trim() || "";
+  return extractResponseText(response);
 }
 
 async function selfCheckAnswer(history, prompt, draftAnswer) {
@@ -553,11 +553,6 @@ async function selfCheckAnswer(history, prompt, draftAnswer) {
   }
 
   const reviewMessages = [
-    {
-      role: "system",
-      content:
-        "Kamu adalah reviewer jawaban untuk bot Discord. Tugasmu mengecek apakah jawaban draft sudah relevan dengan pertanyaan user, konsisten dengan konteks percakapan, tidak keluar topik, dan tidak menebak tanpa dasar. Jika draft kurang tepat, perbaiki. Jika sudah tepat, tulis ulang dengan rapi. Keluarkan jawaban final saja tanpa menjelaskan proses review."
-    },
     ...history,
     {
       role: "user",
@@ -574,13 +569,15 @@ async function selfCheckAnswer(history, prompt, draftAnswer) {
     }
   ];
 
-  const response = await llm.chat.completions.create({
+  const response = await llm.messages.create({
     model: config.llmModel,
-    messages: reviewMessages,
-    temperature: 0.1
+    max_tokens: config.llmMaxTokens,
+    system:
+      "Kamu adalah reviewer jawaban untuk bot Discord. Tugasmu mengecek apakah jawaban draft sudah relevan dengan pertanyaan user, konsisten dengan konteks percakapan, tidak keluar topik, dan tidak menebak tanpa dasar. Jika draft kurang tepat, perbaiki. Jika sudah tepat, tulis ulang dengan rapi. Keluarkan jawaban final saja tanpa menjelaskan proses review.",
+    messages: reviewMessages
   });
 
-  return response.choices[0]?.message?.content?.trim() || draftAnswer;
+  return extractResponseText(response) || draftAnswer;
 }
 
 async function rewriteDirectedMessage(targetName, instructionText) {
@@ -590,25 +587,20 @@ async function rewriteDirectedMessage(targetName, instructionText) {
     return "";
   }
 
-  const messages = [
-    {
-      role: "system",
-      content:
-        "Kamu membantu merapikan instruksi singkat untuk dikirim ke seseorang di Discord. Ubah instruksi user menjadi kalimat langsung yang natural, singkat, jelas, dan tetap mempertahankan maksud aslinya. Jangan menambahkan mention, jangan menyebut nama target, dan jangan mengubah inti perintah. Keluarkan teks final saja."
-    },
-    {
-      role: "user",
-      content: `Target: ${targetName}\nInstruksi mentah: ${trimmedInstruction}`
-    }
-  ];
-
-  const response = await llm.chat.completions.create({
+  const response = await llm.messages.create({
     model: config.llmModel,
-    messages,
-    temperature: 0.2
+    max_tokens: config.llmMaxTokens,
+    system:
+      "Kamu membantu merapikan instruksi singkat untuk dikirim ke seseorang di Discord. Ubah instruksi user menjadi kalimat langsung yang natural, singkat, jelas, dan tetap mempertahankan maksud aslinya. Jangan menambahkan mention, jangan menyebut nama target, dan jangan mengubah inti perintah. Keluarkan teks final saja.",
+    messages: [
+      {
+        role: "user",
+        content: `Target: ${targetName}\nInstruksi mentah: ${trimmedInstruction}`
+      }
+    ]
   });
 
-  return response.choices[0]?.message?.content?.trim() || trimmedInstruction;
+  return extractResponseText(response) || trimmedInstruction;
 }
 
 function isBeautyQuestion(prompt) {
@@ -976,9 +968,8 @@ async function generateAnswer(conversationKey, prompt) {
     return "Aku belum punya konteks sebelumnya untuk itu. Coba kirim ulang topiknya atau pertanyaan lengkapnya ya.";
   }
 
-  const draftAnswer = await createDraftAnswer(
-    buildAnswerMessages(history, prompt)
-  );
+  const { system, messages } = buildAnswerMessages(history, prompt);
+  const draftAnswer = await createDraftAnswer(system, messages);
   const answer =
     (await selfCheckAnswer(history, prompt, draftAnswer)) ||
     "Maaf, aku belum bisa menghasilkan jawaban untuk pesan itu.";

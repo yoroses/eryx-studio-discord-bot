@@ -2,10 +2,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const llmApiKey = process.env.GROQ_API_KEY;
-const llmModel = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+const llmApiKey = process.env.ANTHROPIC_API_KEY;
+const llmModel = process.env.CLAUDE_MODEL || "claude-opus-4-8";
+const llmMaxTokens = Number(process.env.CLAUDE_MAX_TOKENS || 1024);
 
-const requiredVars = ["DISCORD_TOKEN", "DISCORD_CLIENT_ID", "GROQ_API_KEY"];
+const requiredVars = ["DISCORD_TOKEN", "DISCORD_CLIENT_ID", "ANTHROPIC_API_KEY"];
 const missingVars = requiredVars.filter((key) => !process.env[key]);
 
 if (missingVars.length > 0) {
@@ -20,7 +21,7 @@ export const config = {
   discordGuildId: process.env.DISCORD_GUILD_ID || "",
   llmApiKey,
   llmModel,
-  llmBaseUrl: "https://api.groq.com/openai/v1",
+  llmMaxTokens,
   replyDelayMs: Number(process.env.REPLY_DELAY_MS || 1500),
   selfCheckEnabled: process.env.SELF_CHECK_ENABLED !== "false",
   strictFactualMode: process.env.STRICT_FACTUAL_MODE !== "false",

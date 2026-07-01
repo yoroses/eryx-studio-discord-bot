@@ -1,6 +1,6 @@
 # Eryx Studio Discord Bot
 
-Discord bot sederhana yang bisa ngobrol seperti ChatGPT memakai Groq API, slash command Discord, dan mention langsung.
+Discord bot sederhana yang bisa ngobrol seperti ChatGPT memakai Claude API (Anthropic), slash command Discord, dan mention langsung.
 
 ## Fitur
 
@@ -32,8 +32,9 @@ copy .env.example .env
 - `DISCORD_TOKEN`
 - `DISCORD_CLIENT_ID`
 - `DISCORD_GUILD_ID` opsional tapi direkomendasikan saat testing agar slash command muncul lebih cepat
-- `GROQ_API_KEY`
-- `GROQ_MODEL` opsional, default `openai/gpt-oss-20b`
+- `ANTHROPIC_API_KEY`
+- `CLAUDE_MODEL` opsional, default `claude-opus-4-8`
+- `CLAUDE_MAX_TOKENS` opsional, default `1024`
 - `SYSTEM_PROMPT` opsional
 
 4. Register slash command:
@@ -92,8 +93,9 @@ nano .env
 DISCORD_TOKEN=token_bot_discord
 DISCORD_CLIENT_ID=application_client_id
 DISCORD_GUILD_ID=id_server_testing
-GROQ_API_KEY=api_key_groq
-GROQ_MODEL=openai/gpt-oss-20b
+ANTHROPIC_API_KEY=api_key_claude
+CLAUDE_MODEL=claude-opus-4-8
+CLAUDE_MAX_TOKENS=1024
 REPLY_DELAY_MS=1500
 SELF_CHECK_ENABLED=true
 STRICT_FACTUAL_MODE=true
@@ -161,12 +163,12 @@ Untuk slash command voice:
 9. Di menu `Bot`, aktifkan `Message Content Intent` agar bot bisa membaca isi pesan mention.
 10. Di menu `Bot`, aktifkan `Server Members Intent` agar bot bisa membaca daftar member, display name, role, dan melakukan pencocokan mention member dengan lebih akurat.
 
-## Cara ambil API key Groq
+## Cara ambil API key Claude
 
-1. Buka `https://console.groq.com/keys`.
-2. Login atau buat akun Groq.
-3. Buat API key baru.
-4. Salin ke `GROQ_API_KEY` di file `.env`.
+1. Buka `https://console.anthropic.com/settings/keys`.
+2. Login atau buat akun Anthropic.
+3. Klik `Create Key`, buat API key baru.
+4. Salin ke `ANTHROPIC_API_KEY` di file `.env`.
 
 ## Catatan
 
@@ -177,5 +179,5 @@ Untuk slash command voice:
 - Bot tidak perlu permission `Administrator` untuk mention member. Yang penting intent member aktif dan permission dasar chat tersedia.
 - Untuk fitur voice, bot juga butuh izin `Connect` dan `Speak` di voice channel tujuan.
 - Playback YouTube paling stabil dijalankan di VPS Linux dengan jaringan yang stabil.
-- Berdasarkan docs resmi Groq saat ini, Groq kompatibel dengan OpenAI SDK jika `baseURL` diarahkan ke `https://api.groq.com/openai/v1`.
-- Untuk kompatibilitas yang lebih aman, project ini memakai `chat.completions.create(...)` dengan model default `openai/gpt-oss-20b`.
+- Project ini pakai `@anthropic-ai/sdk` resmi dan memanggil `messages.create(...)` dengan model default `claude-opus-4-8`.
+- Kalau mau model yang lebih hemat biaya, isi `CLAUDE_MODEL` dengan `claude-sonnet-5` atau `claude-haiku-4-5`.
